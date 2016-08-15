@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.20.1/mapbox-gl.js'></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.21.0/mapbox-gl.js'></script>
+
+    <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v2.0.0/turf.min.js'></script>
+    <!-- <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v3.0.11/turf.min.js'></script>  -->
+
+    <link href='https://api.mapbox.com/mapbox-gl-js/v0.21.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id='map'></div>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ';
+
+        var bbox = [40.21, -2.54, 52.69, 12.46];
+        var cellWidth = 50;
+        var units = 'kilometers';
+
+        //var hexgrid = turf.hexGrid(bbox, cellWidth, units);
+        //var grid = turf.count(grid, pts, 'pt_count');
+        //var hexgrid = turf.hexGrid([39.792, 12.147, 51.768, -1.889], 50, "kilometers")
+        //var hexgrid = turf.hex([-115.52, 25.460, -87.5, 45.468], .5);
+
+        /*
+        hexgrid.features.map(function(grid) {
+            grid.properties = {
+                "stroke-width": 1
+            };
+            return grid;
+        });
+        */
+
+
+
+        //var hex_url = 'https://raw.githubusercontent.com/onaio/turf-experiments/gh-pages/data/somhex20.geojson';
+        var tpm_url = 'https://raw.githubusercontent.com/onaio/turf-experiments/gh-pages/data/tpm-aug14.geojson';
+        //var tpm_csv = 'https://raw.githubusercontent.com/onaio/turf-experiments/gh-pages/data/tpm_activities.csv';
+        var somhexbin_url = 'https://raw.githubusercontent.com/onaio/turf-experiments/gh-pages/data/sombuf-hex25.geojson';
+
+
+        var map = new mapboxgl.Map({
+            container: 'map', // container id
+            style: 'mapbox://styles/mapbox/satellite-streets-v9', //stylesheet location
+            center: [44, 3], // starting position
+            zoom: 5.5 // starting zoom
+        });
+
+
+        var aggregations = [{
+            aggregation: 'count',
+            inField: '',
+            outField: 'point_count'
+        }];
+
+        // see if we can load this dynamically!
+
+
+        //var sombuf = d3.json('./data/sombuf.json', function (error, bufhex) {
+        //console.log(JSON.stringify(bufhex));
+        //  return bufhex;
+        //});
+
+
+
+        d3.json(tpm_url, function(error, tpm_data) {
+            d3.json(somhexbin_url, function(error, bufhex) {
+                //console.log(JSON.stringify(bufhex));
+
+                // This is what needs to work v
+
+                //var cliphexgrid = turf.intersect(bufhex,hexgrid);
+
+                // aggregate is for turf 2.0
+
+                var hexagg = turf.aggregate(bufhex, tpm_data, aggregations);
+
+                // collect is for turf 3.0
+
+                //var hexagg = turf.collect(bufhex,tpm_data,'','point_count');
+                //console.log(JSON.stringify(hexagg));
+
+
+                map.addSource('tpm_data', {
+                    type: 'geojson',
+                    data: tpm_data
+                });
+
+
+
+                map.on('load', function() {
+                    map.addSource('somhex', {
+                        'type': 'geojson',
+                        'data': hexagg
+                    });
+
+
+                    map.addLayer({
+                        'id': 'route',
+                        'type': 'fill',
+                        'source': 'somhex',
+                        'paint': {
+                            'fill-outline-color': '#ccc',
+                            'fill-color': {
+                                property: 'point_count',
+                                stops: [
+                                        [0, 'transparent'],
+                                        [1, '#f2f0f7'],
+                                        [100, '#54278f']
+                                    ] // #f00
+
+                            },
+                            'fill-opacity': 0.8
+                        }
+                    }, 'waterway-label');
+
+                    var points_layer = map.addLayer({
+                        'id': 'tpm_data',
+                        'type': 'circle',
+                        'source': 'tpm_data',
+                        'paint': {
+                            'circle-opacity': 1,
+                            'circle-color': '#54278f',
+                            'circle-radius': 2
+                        }
+                    }, 'waterway-label');
+
+
+                });
+            });
+        });
+    </script>
+
+</body>
+
+</html>
