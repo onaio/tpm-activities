@@ -1,0 +1,22 @@
+body
+{
+	font-family: proxima-nova,sans-serif;
+}
+
+h1
+{
+	font-weight: 600;
+}
+
+#header
+{
+	max-width: 1024px;
+	margin: 0 auto;
+}
+#map {
+    top: 20px;
+    bottom: 0;
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 0 1em;
+}
