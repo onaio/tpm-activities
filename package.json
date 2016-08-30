@@ -25,6 +25,7 @@
     "react-redux-mapbox-gl": "^1.0.7",
     "react-router": "^2.7.0",
     "transform-loader": "^0.2.3",
+    "turf": "^2.0.0",
     "webworkify-webpack": "^1.1.7"
   },
   "devDependencies": {
