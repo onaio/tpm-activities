@@ -20,3 +20,28 @@ h1
     margin: 0 auto;
     padding: 0 1em;
 }
+
+.ip-dropdown
+{
+	margin: 20px;
+	width: 150px;
+	height: 40px;
+}
+.category-dropdown
+{
+	margin: 30px;
+	width: 150px;
+	height: 40px;
+}
+
+.tpm-type-dropdown
+{
+	margin: 30px;
+	width: 150px;
+	height: 40px;
+}
+.heading
+{
+	float: left;
+	padding-top: 10px;
+}
