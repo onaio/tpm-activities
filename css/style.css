@@ -13,7 +13,7 @@ h1
 	max-width: 1024px;
 	margin: 0 auto;
 }
-#map {
+#map , #app {
     top: 20px;
     bottom: 0;
     max-width: 1024px;
