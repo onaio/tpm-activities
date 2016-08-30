@@ -3,6 +3,48 @@ var ReactDOM = require('react-dom');
 var d3 = require('d3');
 var turf = require('turf');
 
+
+var Header = React.createClass({
+	render: function()
+	{
+		return (
+			<div id="header">
+			<h1 className="heading"> MESH TPM Activities </h1>
+			<select name="ip" className="ip-dropdown">
+			<option> Implementing Partner </option>
+			<option> UNICEF </option>
+			<option> BRiCS </option>
+			<option> NRC </option>
+			<option> WFP </option>
+			<option> BRiCS_CESVI</option>
+			<option> FAO </option>
+			<option> SNS </option>
+			</select>
+
+			<select name="category" className="category-dropdown">
+			<option value="category" selected> Category </option>
+			<option> Nutrition & Health  </option>
+			<option> Cash Transfers </option>
+			<option> Livelihoods </option>
+			<option> Midline </option>
+			<option> Quarterly Monitoring </option>
+			<option> Nutritional Casual Analysis Verification </option>
+			<option> WASH Monitoring </option>
+			<option> Education Monitoring  </option>
+			<option> Nutrition & Health Monitoring </option>
+			<option> Protection Monitoring </option>
+			</select>
+
+			<select name="tpm_type" className="tpm-type-dropdown">
+			<option value="tpm_type"> TPM Type </option>
+			<option value="cc"> CC </option>
+			<option value="fs"> FS </option>
+			</select>
+			</div>
+			)
+	}
+});
+
 var MapWidget = React.createClass({
   getInitialState: function() {
  //    var mapboxgl = require('mapbox-gl');
@@ -143,44 +185,13 @@ var MapWidget = React.createClass({
   	var { map } = this.state;
   	return (
   		<div>
-  		<div id="header">
-  		<h1 className="heading"> MESH TPM Activities </h1>
-  		<select name="ip" className="ip-dropdown">
-  		<option> Implementing Partner </option>
-  		<option> UNICEF </option>
-  		<option> BRiCS </option>
-  		<option> NRC </option>
-  		<option> WFP </option>
-  		<option> BRiCS_CESVI</option>
-  		<option> FAO </option>
-  		<option> SNS </option>
-  		</select>
-
-  		<select name="category" className="category-dropdown">
-  		<option value="category" selected> Category </option>
-  		<option> Nutrition & Health  </option>
-  		<option> Cash Transfers </option>
-  		<option> Livelihoods </option>
-  		<option> Midline </option>
-  		<option> Quarterly Monitoring </option>
-  		<option> Nutritional Casual Analysis Verification </option>
-  		<option> WASH Monitoring </option>
-  		<option> Education Monitoring  </option>
-  		<option> Nutrition & Health Monitoring </option>
-  		<option> Protection Monitoring </option>
-  		</select>
-
-  		<select name="tpm_type" className="tpm-type-dropdown">
-  		<option value="tpm_type"> TPM Type </option>
-  		<option value="cc"> CC </option>
-  		<option value="fs"> FS </option>
-  		</select>
-  		</div>
+  		<Header />
   		<div> { map } </div>
   		</div>
     );
   }
 });
+
 
 ReactDOM.render(<MapWidget token='pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ' /> ,
 						   document.getElementById('app'));
