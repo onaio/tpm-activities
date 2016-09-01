@@ -5,21 +5,27 @@ var turf = require('turf');
 var $ = require ('jquery');
 var GeoJSON = require('geojson');
 var _ = require ('lodash');
+
+
 function transformDataset(dataset) {
-	var transformedDataset = dataset.feed.entry.map(function(entry){
-		var contentString = entry.content.$t;
-		var contentFields = contentString.split(',');
-		var content = {};
-		contentFields.forEach(function(field) {
-			var fieldParts = field.split(':')
-			content[fieldParts[0].trim()] = fieldParts[1].trim();
-			content.latitude = Number.parseFloat(content.latitude);
-			content.longitude = Number.parseFloat(content.longitude);
+	if (dataset !== undefined || dataset !== null)
+	{
+		var transformedDataset = dataset.feed.entry.map(function(entry){
+			var contentString = entry.content.$t;
+			var contentFields = contentString.split(',');
+			var content = {};
+			contentFields.forEach(function(field) {
+				var fieldParts = field.split(':')
+				content[fieldParts[0].trim()] = fieldParts[1].trim();
+				content.latitude = Number.parseFloat(content.latitude);
+				content.longitude = Number.parseFloat(content.longitude);
 
-		})
+			})
 
-		return content;
-	});
+			return content;
+		});
+		return transformedDataset;
+	}
 	return transformedDataset;
 }
 
@@ -275,12 +281,11 @@ var PartnerFilter= React.createClass({
 				var mapboxgl = require('mapbox-gl');
 				mapboxgl.accessToken = this.state.token;
 				var map = new mapboxgl.Map({container: 'app',
-				style: 'mapbox://styles/mapbox/streets-v9',
+				style: 'mapbox://styles/mapbox/light-v9',
 				center: [44, 3], // starting position
 				zoom: 5.5 // starting zoom
 			});
 
-			this.setState({map: map});
 
 			var aggregations = [{
 				aggregation: 'count',
@@ -290,9 +295,17 @@ var PartnerFilter= React.createClass({
 
 			var somhexbin_url = 'https://raw.githubusercontent.com/onaio/turf-experiments/gh-pages/data/sombuf-hex25.geojson';
 
-			GeoJSON.parse(this.state.data,{Point: ['latitude', 'longitude']}, function(geojson) {
-				locations = geojson;
-			});
+			if (this.state.data !== undefined)
+			{
+				GeoJSON.parse(this.state.data, {Point: ['latitude', 'longitude']}, function(geojson) {
+					locations = geojson;
+				});
+
+			}
+			else
+			{
+				locations = [];
+			}
 
 			d3.json(somhexbin_url, function(error, bufhex) {
 				//console.log(JSON.stringify(bufhex));
@@ -338,6 +351,9 @@ var PartnerFilter= React.createClass({
 						'id': 'route',
 						'type': 'fill',
 						'source': 'somhex',
+						layout: {
+							visibility: 'visible'
+						},
 						'paint': {
 							'fill-outline-color': '#ccc',
 							'fill-color': {
@@ -357,7 +373,6 @@ var PartnerFilter= React.createClass({
 
 
 				});
-
 				map.on('click', function (e) {
 					var features = map.queryRenderedFeatures(e.point, { layers: ['route'] });
 					if (!features.length) {
@@ -371,15 +386,8 @@ var PartnerFilter= React.createClass({
 					.setHTML(feature.properties.point_count + " TPM Activities")
 					.addTo(map);
 				});
-
-				// Use the same approach as above to indicate that the symbols are clickable
-				// by changing the cursor style to 'pointer'.
-				map.on('mousemove', function (e) {
-					var features = map.queryRenderedFeatures(e.point, { layers: ['route'] });
-					map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
-				});
 			});
-
+			   this.setState({map: map});
 		},
 
 		handleFilters: function()
@@ -387,8 +395,8 @@ var PartnerFilter= React.createClass({
 			this.setState({map: []});
 		},
 		componentDidMount: function() {
-			
-			this.getMap();
+
+			//this.getMap();
 		},
 
 		componentDidUpdate: function(prevProp, prevState)
@@ -442,10 +450,6 @@ var PartnerFilter= React.createClass({
 					type = this.state.currentType;
 				}
 
-				console.log(partner);
-				console.log(category);
-				console.log(type);
-				
 				if(partner!== undefined && category === undefined && type === undefined)
 				{
 					filtereddata = data.filter(function (dataset) {
@@ -530,10 +534,12 @@ var PartnerFilter= React.createClass({
 					<TypeFilter onChange= {this.setType} />
 					</div>
 
+					<div>
 					<MapWidget token='pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ'
 					currentPartner={this.state.currentPartner} data= {this.state.data}/>
+					</div>
 
-					
+
 					</div>)
 				}
 			});
