@@ -44,7 +44,7 @@ h1
 .dropdown{
     float:left;
     padding:0;
-    margin: 5px;
+    margin-left: 5px;
     position:relative;
     width:200px;
 }
@@ -56,9 +56,17 @@ h1
     display:block;
     padding:1em 1.5em;
     text-decoration:none;
-    margin: 20px;
+    margin-top: 20px;
 	width: 200px;
 	height: 40px;
+}
+
+.dropdown-toggle:hover + .dropdown-menu,
+.dropdown-menu:hover{
+    display:block;
+}
+.dropdown-toggle span.caret{
+    margin-left:5px;
 }
 .dropdown > button:hover,
 .dropdown > button:active,
@@ -69,7 +77,7 @@ h1
     padding-right:1%;
 }
 .dropdown:first-child .dropdown-menu{
-    width:98%;
+    width:200px;
 }
 .dropdown .data-label{
     float:left;
@@ -77,7 +85,6 @@ h1
 .dropdown i.fa{
     float:right;
     font-size:1.4em;
-    margin-top:0.2em;
 }
 .dropdown-menu{
     border-radius:0;
