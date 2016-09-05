@@ -410,7 +410,7 @@ var PartnerFilter= React.createClass({
 			if(!_.isEqual(prevProp.data, this.props.data)) {
 				var map = this.state.map;
 				if(this.state.map !== undefined) {
-					removeSourcesAndLayers(map);
+					this.removeSourcesAndLayers(map);
 					this.mapFunctions(map);
 				}
 				else
@@ -461,11 +461,14 @@ var PartnerFilter= React.createClass({
 					type = this.state.currentType;
 				}
 
-				if(partner!== undefined && category === undefined && type === undefined)
+				if ((partner === null || partner === undefined) && (category === undefined || category === null) && (type === undefined || type === null))
+				{
+					filtereddata = localstorageData;
+				}
+				else if ((partner !== undefined || partner !== null) && (category === undefined || category === null)
+					&& (type === undefined || type === null))
 				{
 					filtereddata = localstorageData.filter(function (dataset) {
-
-
 						return dataset.ip.toLowerCase() == partner;
 					});
 				}
@@ -489,7 +492,7 @@ var PartnerFilter= React.createClass({
 
 				else
 				{
-					filtereddata = data;
+					filtereddata = localstorageData;
 				}
 
 				this.setState({data: filtereddata});
