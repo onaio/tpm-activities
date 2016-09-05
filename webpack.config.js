@@ -2,13 +2,13 @@ const webpack = require('webpack');
 const path = require('path');
 var HtmlWebpackPlugin = require('html-webpack-plugin')
 var HTMLWebpackPluginConfig = new HtmlWebpackPlugin({
-  template: __dirname + '/src/index.html',
+  template: __dirname + '/index.html',
   filename: 'index.html',
   inject: 'body'
 });
 module.exports = {
   entry: [
-    './src/index.js'
+    './index.js'
   ],
   resolve: {
      alias: {
