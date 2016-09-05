@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.20.1/mapbox-gl.js'></script>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.21.0/mapbox-gl.js'></script>
+
+    <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v2.0.0/turf.min.js'></script>
+<!--     <script src='https://api.tiles.mapbox.com/mapbox.js/plugins/turf/v3.0.11/turf.min.js'></script>
+ -->
+    <link href='https://api.mapbox.com/mapbox-gl-js/v0.21.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+
+    </style>
+</head>
+
+<body>
+<div id="header">
+<h1 style="float: left; padding-top: 10px;"> MESH TPM Activities </h1>
+
+<select name="ip" style="margin: 20px; width: 150px; height: 40px;">
+    <option> Implementing Partner </option>
+    <option> UNICEF </option>
+    <option> BRiCS </option>
+    <option> NRC </option>
+    <option> WFP </option>
+    <option> BRiCS_CESVI</option>
+    <option> FAO </option>
+    <option> SNS </option>
+</select>
+
+<select name="category" style="margin: 30px; width: 150px; height: 40px;">
+    <option value="category" selected> Category </option>
+    <option> Nutrition & Health  </option>
+    <option> Cash Transfers </option>
+    <option> Livelihoods </option>
+    <option> Midline </option>
+    <option> Quarterly Monitoring </option>
+    <option> Nutritional Casual Analysis Verification </option>
+    <option> WASH Monitoring </option>
+    <option> Education Monitoring  </option>
+    <option> Nutrition & Health Monitoring </option>
+    <option> Protection Monitoring </option>
+</select>
+
+<select name="tpm_type" style="margin: 30px; width: 150px; height: 40px;">
+    <option value="tpm_type"> TPM Type </option>
+    <option value="cc"> CC </option>
+    <option value="fs"> FS </option>
+</select>
+</div>
+    <div id='map' style='width: 1200px; height: 1200px;'></div>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ';
+
+        var bbox = [40.21, -2.54, 52.69, 12.46];
+        var cellWidth = 50;
+        var units = 'kilometers';
+
+        //var hexgrid = turf.hexGrid(bbox, cellWidth, units);
+        //var grid = turf.count(grid, pts, 'pt_count');
+        //var hexgrid = turf.hexGrid([39.792, 12.147, 51.768, -1.889], 50, "kilometers")
+        //var hexgrid = turf.hex([-115.52, 25.460, -87.5, 45.468], .5);
+
+        /*
+        hexgrid.features.map(function(grid) {
+            grid.properties = {
+                "stroke-width": 1
+            };
+            return grid;
+        });
+        */
+
+
+
+        //var hex_url = 'https://raw.githubusercontent.com/onaio/turf-experiments/gh-pages/data/somhex20.geojson';
+        var tpm_url = 'https://raw.githubusercontent.com/onaio/turf-experiments/gh-pages/data/unicef-cash.geojson';
+        //var tpm_csv = 'https://raw.githubusercontent.com/onaio/turf-experiments/gh-pages/data/tpm_activities.csv';
+        var somhexbin_url = 'https://raw.githubusercontent.com/onaio/turf-experiments/gh-pages/data/sombuf-hex25.geojson';
+
+
+        var map = new mapboxgl.Map({
+            container: 'map', // container id
+            style: 'mapbox://styles/mapbox/light-v9', //stylesheet location
+            center: [44, 3], // starting position
+            zoom: 5.5 // starting zoom
+        });
+
+
+        var aggregations = [{
+            aggregation: 'count',
+            inField: '',
+            outField: 'point_count'
+        }];
+
+        // see if we can load this dynamically!
+
+
+        //var sombuf = d3.json('./data/sombuf.json', function (error, bufhex) {
+        //console.log(JSON.stringify(bufhex));
+        //  return bufhex;
+        //});
+
+
+
+        d3.json(tpm_url, function(error, tpm_data) {
+            d3.json(somhexbin_url, function(error, bufhex) {
+                //console.log(JSON.stringify(bufhex));
+
+                // This is what needs to work v
+
+                //var cliphexgrid = turf.intersect(bufhex,hexgrid);
+
+                // aggregate is for turf 2.0
+
+                var hexagg = turf.aggregate(bufhex, tpm_data, aggregations);
+
+                // collect is for turf 3.0
+
+                //var hexagg = turf.collect(bufhex,tpm_data,'','point_count');
+                //console.log(JSON.stringify(hexagg));
+
+
+                map.addSource('tpm_data', {
+                    type: 'geojson',
+                    data: tpm_data
+                });
+
+                var points_layer = map.addLayer({
+                    'id': 'tpm_data',
+                    'type': 'circle',
+                    'source': 'tpm_data',
+                    'paint': {
+                        'circle-opacity': 1,
+                        'circle-color': '#334d4d',
+                        'circle-radius': 2
+                    }
+                }, 'waterway-label');
+
+                map.on('load', function() {
+                    map.addSource('somhex', {
+                        'type': 'geojson',
+                        'data': hexagg
+                    });
+
+
+                    map.addLayer({
+                        'id': 'route',
+                        'type': 'fill',
+                        'source': 'somhex',
+                        'paint': {
+                            'fill-outline-color': '#ccc',
+                            'fill-color': {
+                                property: 'point_count',
+                                stops: [
+                                        [0, 'transparent'],
+                                        [1, '#eff3ff'],
+                                        [100, '#08519c']
+                                    ] // #f00
+
+                            },
+                            'fill-opacity': 0.7
+                        }
+                    }, 'waterway-label');
+
+
+
+
+                });
+
+                map.on('click', function (e) {
+                    var features = map.queryRenderedFeatures(e.point, { layers: ['route'] });
+                    if (!features.length) {
+                        return;
+                    }
+
+                    var feature = features[0];
+
+                    var popup = new mapboxgl.Popup()
+                    .setLngLat(map.unproject(e.point))
+                    .setHTML(feature.properties.point_count + " TPM Activities")
+                    .addTo(map);
+                });
+
+                // Use the same approach as above to indicate that the symbols are clickable
+                // by changing the cursor style to 'pointer'.
+                map.on('mousemove', function (e) {
+                    var features = map.queryRenderedFeatures(e.point, { layers: ['route'] });
+                    map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
+                });
+            });
+        });
+    </script>
+
+</body>
+
+</html>
