@@ -481,7 +481,7 @@
 
 					var feature = features[0];
 
-					var popup = new mapboxgl.Popup().setLngLat(map.unproject(e.point)).setHTML(feature.properties.point_count + " TPM Activities").addTo(map);
+					var popup = new mapboxgl.Popup().setLngLat(map.unproject(e.point)).setHTML(feature.properties.point_count + " TPM Interviews").addTo(map);
 				});
 			});
 			this.setState({ map: map });
