@@ -271,7 +271,7 @@ var PartnerFilter= React.createClass({
 	});
 
 	var MapWidget = React.createClass({
-		getInitialState: function() {
+		getInitialState: function() {		
 			return {token: this.props.token,
 				currentPartner: this.props.currentPartner,
 				data: this.props.data}
@@ -281,7 +281,7 @@ var PartnerFilter= React.createClass({
 				var mapboxgl = require('mapbox-gl');
 				mapboxgl.accessToken = this.state.token;
 				var map = new mapboxgl.Map({container: 'app',
-				style: 'mapbox://styles/mapbox/light-v9',
+				style: 'mapbox://styles/mapbox/streets-v9',
 				center: [44, 3], // starting position
 				zoom: 5.5 // starting zoom
 			});
@@ -387,7 +387,7 @@ var PartnerFilter= React.createClass({
 					.addTo(map);
 				});
 			});
-			   this.setState({map: map});
+			this.setState({map: map});
 		},
 
 		handleFilters: function()
@@ -437,7 +437,8 @@ var PartnerFilter= React.createClass({
 				currentCategory: this.props.category !== undefined ? this.props.category : null,
 				currentType: this.props.type !== undefined ? this.props.type : null};
 			},
-			_handleIndicators: function(data, kwargs) {
+			_handleFilters: function(data, kwargs) {
+				var localstorageData = JSON.parse(localStorage.getItem('data'));
 				if(kwargs) {
 					category = kwargs.category;
 					partner = kwargs.partner;
@@ -452,7 +453,7 @@ var PartnerFilter= React.createClass({
 
 				if(partner!== undefined && category === undefined && type === undefined)
 				{
-					filtereddata = data.filter(function (dataset) {
+					filtereddata = localstorageData.filter(function (dataset) {
 
 
 						return dataset.ip.toLowerCase() == partner;
@@ -460,7 +461,7 @@ var PartnerFilter= React.createClass({
 				}
 				else if(category !== undefined && partner === undefined && type === undefined)
 				{
-					filtereddata = data.filter(function (dataset)
+					filtereddata = localstorageData.filter(function (dataset)
 					{
 						return dataset.category.toLowerCase() == category;
 					});
@@ -469,7 +470,7 @@ var PartnerFilter= React.createClass({
 				else if (type !== undefined && category === undefined && partner === undefined )
 
 				{
-					filtereddata = data.filter(function (dataset)
+					filtereddata = localstorageData.filter(function (dataset)
 					{
 						return dataset.tpmtype.toLowerCase() == type;
 					});
@@ -485,32 +486,7 @@ var PartnerFilter= React.createClass({
 
 			},
 
-			setPartner: function(_partner) {
-				if (this.state.currentPartner !== _partner) {
-					this.setState({currentPartner: _partner});
-					this._handleIndicators(this.state.data, {partner: _partner});
-				}
-			},
-			setCategory: function(_category) {
-				if (this.state.currentCategory !== _category) {
-					this.setState({currentCategory: _category});
-					this._handleIndicators(this.state.data, {category: _category});
-				}
-			},
-			setType: function(_type) {
-				if (this.state.currentType !== _type) {
-					this.setState({currentType: _type});
-					this._handleIndicators(this.state.data, {type: _type});
-				}
-			},
-			componentDidMount: function ()
-			{
-				// var data = this.getData();
-				// this.setState({data: data});
-
-			},
-
-			componentWillMount: function ()
+			getData: function()
 			{
 				this.serverRequest = $.getJSON("https://spreadsheets.google.com/feeds/list/1x3riTR0U7Hzdmp09wytjBen8Jh6cEPWYNYHI673n6o4/1/public/basic?alt=json", function (tpm_data) {
 					var transformedDataset = transformDataset(tpm_data);
@@ -518,32 +494,64 @@ var PartnerFilter= React.createClass({
 						return !isNaN(val.longitude) && !isNaN(val.latitude)})
 						this.setState({
 							data: transformedDataset
+
 						});
+					localStorage.setItem('data', JSON.stringify(transformedDataset));
 					}.bind(this));
 				},
 
-				render: function() {
-					var token = 'pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ';
-					return (
+				setPartner: function(_partner) {
+					if (this.state.currentPartner !== _partner) {
+						this.setState({currentPartner: _partner});
+						this._handleFilters(this.state.data, {partner: _partner});
+					}
+				},
+				setCategory: function(_category) {
+					if (this.state.currentCategory !== _category) {
+						this.setState({currentCategory: _category});
+						this._handleFilters(this.state.data, {category: _category});
+					}
+				},
+				setType: function(_type) {
+					if (this.state.currentType !== _type) {
+						this.setState({currentType: _type});
+						this._handleFilters(this.state.data, {type: _type});
+					}
+				},
+				componentDidMount: function ()
+				{
+					// var data = this.getData();
+					// this.setState({data: data});
 
-					<div className="container fluid">
-					<div id="header">
-					<Header />
-					<PartnerFilter onChange={ this.setPartner } />
-					<CategoryFilter onChange={ this.setCategory } />
-					<TypeFilter onChange= {this.setType} />
-					</div>
+				},
 
-					<div>
-					<MapWidget token='pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ'
-					currentPartner={this.state.currentPartner} data= {this.state.data}/>
-					</div>
+				componentWillMount: function ()
+				{
+					this.getData();
+				},
+
+					render: function() {
+						var token = 'pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ';
+						return (
+
+						<div className="container fluid">
+						<div id="header">
+						<Header />
+						<PartnerFilter onChange={ this.setPartner } />
+						<CategoryFilter onChange={ this.setCategory } />
+						<TypeFilter onChange= {this.setType} />
+						</div>
+
+						<div>
+						<MapWidget token='pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ'
+						currentPartner={this.state.currentPartner} data= {this.state.data}/>
+						</div>
 
 
-					</div>)
-				}
-			});
+						</div>)
+					}
+				});
 
 
-			ReactDOM.render(<Dashboard /> ,
-			document.getElementById('app'));
+				ReactDOM.render(<Dashboard /> ,
+				document.getElementById('app'));
