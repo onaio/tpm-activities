@@ -276,71 +276,61 @@ var PartnerFilter= React.createClass({
 				currentPartner: this.props.currentPartner,
 				data: this.props.data}
 			},
-			getMap: function()
+			mapFunctions: function(map)
 			{
-				var mapboxgl = require('mapbox-gl');
-				mapboxgl.accessToken = this.state.token;
-				var map = new mapboxgl.Map({container: 'app',
-				style: 'mapbox://styles/mapbox/streets-v9',
-				center: [44, 3], // starting position
-				zoom: 5.5 // starting zoom
-			});
+				var aggregations = [{
+					aggregation: 'count',
+					inField: '',
+					outField: 'point_count'
+				}];
+
+				var somhexbin_url = 'https://raw.githubusercontent.com/onaio/turf-experiments/gh-pages/data/sombuf-hex25.geojson';
+
+				if (this.state.data !== undefined)
+				{
+					GeoJSON.parse(this.state.data, {Point: ['latitude', 'longitude']}, function(geojson) {
+						locations = geojson;
+					});
+
+				}
+				else
+				{
+					locations = [];
+				}
+				d3.json(somhexbin_url, function(error, bufhex) {
+					//console.log(JSON.stringify(bufhex));
+
+					// This is what needs to work v
+
+					//var cliphexgrid = turf.intersect(bufhex,hexgrid);
+
+					// aggregate is for turf 2.0
 
 
-			var aggregations = [{
-				aggregation: 'count',
-				inField: '',
-				outField: 'point_count'
-			}];
+					var hexagg = turf.aggregate(bufhex, locations, aggregations);
 
-			var somhexbin_url = 'https://raw.githubusercontent.com/onaio/turf-experiments/gh-pages/data/sombuf-hex25.geojson';
+					// collect is for turf 3.0
 
-			if (this.state.data !== undefined)
-			{
-				GeoJSON.parse(this.state.data, {Point: ['latitude', 'longitude']}, function(geojson) {
-					locations = geojson;
-				});
+					// var hexagg = turf.collect(bufhex,locations,'','point_count');
+					//console.log(JSON.stringify(hexagg));
 
-			}
-			else
-			{
-				locations = [];
-			}
+					map.addSource('locations', {
+						type: 'geojson',
+						data: locations
+					});
 
-			d3.json(somhexbin_url, function(error, bufhex) {
-				//console.log(JSON.stringify(bufhex));
-
-				// This is what needs to work v
-
-				//var cliphexgrid = turf.intersect(bufhex,hexgrid);
-
-				// aggregate is for turf 2.0
+					var points_layer = map.addLayer({
+						'id': 'locations',
+						'type': 'circle',
+						'source': 'locations',
+						'paint': {
+							'circle-opacity': 1,
+							'circle-color': '#334d4d',
+							'circle-radius': 2
+						}
+					}, 'waterway-label');
 
 
-				var hexagg = turf.aggregate(bufhex, locations, aggregations);
-
-				// collect is for turf 3.0
-
-				// var hexagg = turf.collect(bufhex,locations,'','point_count');
-				//console.log(JSON.stringify(hexagg));
-
-				map.addSource('locations', {
-					type: 'geojson',
-					data: locations
-				});
-
-				var points_layer = map.addLayer({
-					'id': 'locations',
-					'type': 'circle',
-					'source': 'locations',
-					'paint': {
-						'circle-opacity': 1,
-						'circle-color': '#334d4d',
-						'circle-radius': 2
-					}
-				}, 'waterway-label');
-
-				map.on('load', function() {
 					map.addSource('somhex', {
 						'type': 'geojson',
 						'data': hexagg
@@ -369,30 +359,46 @@ var PartnerFilter= React.createClass({
 						}
 					}, 'waterway-label');
 
+					map.on('click', function (e) {
+						var features = map.queryRenderedFeatures(e.point, { layers: ['route'] });
+						if (!features.length) {
+							return;
+						}
 
-
-
+						var feature = features[0];
+						var popup = new mapboxgl.Popup()
+						.setLngLat(map.unproject(e.point))
+						.setHTML(feature.properties.point_count + " TPM Activities")
+						.addTo(map);
+					});
 				});
-				map.on('click', function (e) {
-					var features = map.queryRenderedFeatures(e.point, { layers: ['route'] });
-					if (!features.length) {
-						return;
-					}
-
-					var feature = features[0];
-
-					var popup = new mapboxgl.Popup()
-					.setLngLat(map.unproject(e.point))
-					.setHTML(feature.properties.point_count + " TPM Interviews")
-					.addTo(map);
-				});
+				this.setState({map: map})
+			},
+			getMap: function()
+			{
+				var mapboxgl = require('mapbox-gl');
+				mapboxgl.accessToken = this.state.token;
+				var map = new mapboxgl.Map({container: 'app',
+				style: 'mapbox://styles/mapbox/streets-v9',
+				center: [44, 3], // starting position
+				zoom: 5.5 // starting zoom
 			});
+
 			this.setState({map: map});
+			this.mapFunctions(map);
+
 		},
 
 		handleFilters: function()
 		{
 			this.setState({map: []});
+		},
+		removeSourcesAndLayers: function(map)
+		{
+			map.removeSource('locations');
+			map.removeLayer('locations');
+			map.removeSource('somhex');
+			map.removeLayer('route');
 		},
 		componentDidMount: function() {
 
@@ -402,11 +408,15 @@ var PartnerFilter= React.createClass({
 		componentDidUpdate: function(prevProp, prevState)
 		{
 			if(!_.isEqual(prevProp.data, this.props.data)) {
+				var map = this.state.map;
 				if(this.state.map !== undefined) {
-					this.state.map.remove();
-					delete this.state.map;
+					removeSourcesAndLayers(map);
+					this.mapFunctions(map);
 				}
-				this.getMap();
+				else
+				{
+					this.getMap();
+				}
 			} 
 		},
 		componentWillReceiveProps: function(nextProps)
@@ -496,7 +506,7 @@ var PartnerFilter= React.createClass({
 							data: transformedDataset
 
 						});
-					localStorage.setItem('data', JSON.stringify(transformedDataset));
+						localStorage.setItem('data', JSON.stringify(transformedDataset));
 					}.bind(this));
 				},
 
@@ -530,28 +540,28 @@ var PartnerFilter= React.createClass({
 					this.getData();
 				},
 
-					render: function() {
-						var token = 'pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ';
-						return (
+				render: function() {
+					var token = 'pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ';
+					return (
 
-						<div className="container fluid">
-						<div id="header">
-						<Header />
-						<PartnerFilter onChange={ this.setPartner } />
-						<CategoryFilter onChange={ this.setCategory } />
-						<TypeFilter onChange= {this.setType} />
-						</div>
+					<div className="container fluid">
+					<div id="header">
+					<Header />
+					<PartnerFilter onChange={ this.setPartner } />
+					<CategoryFilter onChange={ this.setCategory } />
+					<TypeFilter onChange= {this.setType} />
+					</div>
 
-						<div>
-						<MapWidget token='pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ'
-						currentPartner={this.state.currentPartner} data= {this.state.data}/>
-						</div>
-
-
-						</div>)
-					}
-				});
+					<div>
+					<MapWidget token='pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ'
+					currentPartner={this.state.currentPartner} data= {this.state.data}/>
+					</div>
 
 
-				ReactDOM.render(<Dashboard /> ,
-				document.getElementById('app'));
+					</div>)
+				}
+			});
+
+
+			ReactDOM.render(<Dashboard /> ,
+			document.getElementById('app'));
