@@ -383,7 +383,7 @@ var PartnerFilter= React.createClass({
 
 					var popup = new mapboxgl.Popup()
 					.setLngLat(map.unproject(e.point))
-					.setHTML(feature.properties.point_count + " TPM Activities")
+					.setHTML(feature.properties.point_count + " TPM Interviews")
 					.addTo(map);
 				});
 			});
