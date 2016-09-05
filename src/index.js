@@ -5,7 +5,7 @@ var turf = require('turf');
 var $ = require ('jquery');
 var GeoJSON = require('geojson');
 var _ = require ('lodash');
-
+var mapboxgl = require('mapbox-gl');
 
 function transformDataset(dataset) {
 	if (dataset !== undefined || dataset !== null)
@@ -376,7 +376,6 @@ var PartnerFilter= React.createClass({
 			},
 			getMap: function()
 			{
-				var mapboxgl = require('mapbox-gl');
 				mapboxgl.accessToken = this.state.token;
 				var map = new mapboxgl.Map({container: 'app',
 				style: 'mapbox://styles/mapbox/streets-v9',
