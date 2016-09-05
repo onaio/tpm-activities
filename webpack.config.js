@@ -8,7 +8,8 @@ var HTMLWebpackPluginConfig = new HtmlWebpackPlugin({
 });
 module.exports = {
   entry: [
-    './index.js'
+    './index.js',
+    './index'
   ],
   resolve: {
      alias: {
