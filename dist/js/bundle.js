@@ -67,7 +67,6 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	__webpack_require__(1);
 	module.exports = __webpack_require__(1);
 
 
@@ -82,6 +81,7 @@
 	var $ = __webpack_require__(301);
 	var GeoJSON = __webpack_require__(302);
 	var _ = __webpack_require__(303);
+	var mapboxgl = __webpack_require__(305);
 
 	function transformDataset(dataset) {
 		if (dataset !== undefined || dataset !== null) {
@@ -391,15 +391,7 @@
 				currentPartner: this.props.currentPartner,
 				data: this.props.data };
 		},
-		getMap: function () {
-			var mapboxgl = __webpack_require__(305);
-			mapboxgl.accessToken = this.state.token;
-			var map = new mapboxgl.Map({ container: 'app',
-				style: 'mapbox://styles/mapbox/streets-v9',
-				center: [44, 3], // starting position
-				zoom: 5.5 // starting zoom
-			});
-
+		mapFunctions: function (map) {
 			var aggregations = [{
 				aggregation: 'count',
 				inField: '',
@@ -415,7 +407,6 @@
 			} else {
 				locations = [];
 			}
-
 			d3.json(somhexbin_url, function (error, bufhex) {
 				//console.log(JSON.stringify(bufhex));
 
@@ -449,30 +440,29 @@
 					}
 				}, 'waterway-label');
 
-				map.on('load', function () {
-					map.addSource('somhex', {
-						'type': 'geojson',
-						'data': hexagg
-					});
-
-					map.addLayer({
-						'id': 'route',
-						'type': 'fill',
-						'source': 'somhex',
-						layout: {
-							visibility: 'visible'
-						},
-						'paint': {
-							'fill-outline-color': '#ccc',
-							'fill-color': {
-								property: 'point_count',
-								stops: [[0, 'transparent'], [1, '#eff3ff'], [100, '#08519c']] // #f00
-
-							},
-							'fill-opacity': 0.7
-						}
-					}, 'waterway-label');
+				map.addSource('somhex', {
+					'type': 'geojson',
+					'data': hexagg
 				});
+
+				map.addLayer({
+					'id': 'route',
+					'type': 'fill',
+					'source': 'somhex',
+					layout: {
+						visibility: 'visible'
+					},
+					'paint': {
+						'fill-outline-color': '#ccc',
+						'fill-color': {
+							property: 'point_count',
+							stops: [[0, 'transparent'], [1, '#eff3ff'], [100, '#08519c']] // #f00
+
+						},
+						'fill-opacity': 0.7
+					}
+				}, 'waterway-label');
+
 				map.on('click', function (e) {
 					var features = map.queryRenderedFeatures(e.point, { layers: ['route'] });
 					if (!features.length) {
@@ -480,15 +470,31 @@
 					}
 
 					var feature = features[0];
-
-					var popup = new mapboxgl.Popup().setLngLat(map.unproject(e.point)).setHTML(feature.properties.point_count + " TPM Interviews").addTo(map);
+					var popup = new mapboxgl.Popup().setLngLat(map.unproject(e.point)).setHTML(feature.properties.point_count + " TPM Activities").addTo(map);
 				});
 			});
 			this.setState({ map: map });
 		},
+		getMap: function () {
+			mapboxgl.accessToken = this.state.token;
+			var map = new mapboxgl.Map({ container: 'app',
+				style: 'mapbox://styles/mapbox/streets-v9',
+				center: [44, 3], // starting position
+				zoom: 5.5 // starting zoom
+			});
+
+			this.setState({ map: map });
+			this.mapFunctions(map);
+		},
 
 		handleFilters: function () {
 			this.setState({ map: [] });
+		},
+		removeSourcesAndLayers: function (map) {
+			map.removeSource('locations');
+			map.removeLayer('locations');
+			map.removeSource('somhex');
+			map.removeLayer('route');
 		},
 		componentDidMount: function () {
 
@@ -497,11 +503,13 @@
 
 		componentDidUpdate: function (prevProp, prevState) {
 			if (!_.isEqual(prevProp.data, this.props.data)) {
+				var map = this.state.map;
 				if (this.state.map !== undefined) {
-					this.state.map.remove();
-					delete this.state.map;
+					this.removeSourcesAndLayers(map);
+					this.mapFunctions(map);
+				} else {
+					this.getMap();
 				}
-				this.getMap();
 			}
 		},
 		componentWillReceiveProps: function (nextProps) {
@@ -539,9 +547,10 @@
 				type = this.state.currentType;
 			}
 
-			if (partner !== undefined && category === undefined && type === undefined) {
+			if ((partner === null || partner === undefined) && (category === undefined || category === null) && (type === undefined || type === null)) {
+				filtereddata = localstorageData;
+			} else if ((partner !== undefined || partner !== null) && (category === undefined || category === null) && (type === undefined || type === null)) {
 				filtereddata = localstorageData.filter(function (dataset) {
-
 					return dataset.ip.toLowerCase() == partner;
 				});
 			} else if (category !== undefined && partner === undefined && type === undefined) {
@@ -553,10 +562,17 @@
 					return dataset.tpmtype.toLowerCase() == type;
 				});
 			} else {
-				filtereddata = data;
+				filtereddata = localstorageData;
 			}
-
+			var cc = filtereddata.filter(function (dataset) {
+				return dataset.tpmtype.toLowerCase() == 'cc';
+			});
+			var fs = filtereddata.filter(function (dataset) {
+				return dataset.tpmtype.toLowerCase() == 'fs';
+			});
 			this.setState({ data: filtereddata });
+			this.setState({ cc: cc.length });
+			this.setState({ fs: fs.length });
 		},
 
 		getData: function () {
