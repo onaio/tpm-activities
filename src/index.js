@@ -493,9 +493,17 @@ var PartnerFilter= React.createClass({
 				{
 					filtereddata = localstorageData;
 				}
-
+				var cc = filtereddata.filter(function (dataset)
+				{
+					return dataset.tpmtype.toLowerCase() == 'cc';
+				});
+				var fs = filtereddata.filter(function (dataset)
+				{
+					return dataset.tpmtype.toLowerCase() == 'fs';
+				});
 				this.setState({data: filtereddata});
-
+				this.setState({cc: cc.length});
+				this.setState({fs: fs.length});
 			},
 
 			getData: function()
