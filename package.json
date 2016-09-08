@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/onaio/tpm-activities#readme",
   "dependencies": {
+    "c3": "^0.4.11",
     "geojson": "^0.3.0",
     "jquery": "^3.1.0",
     "json-loader": "^0.5.4",
