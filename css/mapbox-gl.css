@@ -1,5 +1,7 @@
 .mapboxgl-map {
+    width: 1024px;
     height: 1024px;
+    margin: 0 auto;
     font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
     overflow: hidden;
     position: relative;
