@@ -7,6 +7,7 @@ var GeoJSON = require('geojson');
 var _ = require ('lodash');
 var mapboxgl = require('mapbox-gl');
 var c3 = require('c3');
+var DataTable = require('react-data-components').DataTable;
 
 function transformDataset(dataset) {
 	if (dataset !== undefined || dataset !== null)
@@ -29,6 +30,30 @@ function transformDataset(dataset) {
 	}
 	return transformedDataset;
 }
+
+
+
+var tablecolumns = [
+  { title: 'IP', prop: 'ip'  },
+  { title: 'Category', prop: 'category' },
+  { title: 'Type', prop: 'tpmtype' },
+  { title: 'From', prop: 'from' },
+  { title: 'To', prop: 'to' },
+  { title: 'Surveys', prop: 'surveys' }
+
+];
+
+var tabledata = [
+  { ip: 'UNICEF', category: 'Education Monitoring', tpmtype: 'Cash Transfer', from: '10/1/2015', to: '10/15/2015', surveys: '84' },
+  { ip: 'WFP', category: 'Livelihoods', tpmtype: 'Field Survey', from: '10/1/2015', to: '12345678', surveys: '84' },
+  { ip: 'UNICEF', category: 'Education Monitoring', tpmtype: 'Cash Transfer', from: '11/1/2015', to: '10/20/2015', surveys: '84' },
+  { ip: 'SNS', category: 'Nutrition & Health Monitoring', tpmtype: 'Field Survey', from: '10/1/2015', to: '10/30/2015', surveys: '84' },
+
+  // It also supports arrays
+  // [ 'name value', 'city value', 'address value', 'phone value' ]
+];
+
+
 
 const columns = [['cc', 22],
 ['fs', 30]]
@@ -605,6 +630,7 @@ var PieChart = React.createClass({
 					filtereddata = localstorageData;
 				}
 
+			    this.setState({data: filtereddata});
 				var cc = filtereddata.filter(function (dataset)
 				{
 					return dataset.tpmtype.toLowerCase() == 'cc';
@@ -626,7 +652,18 @@ var PieChart = React.createClass({
 				this.setState({ipchartdata: ipdataarray});
 				this.setState({piechartdata: [['cc', cc.length],
 				['fs', fs.length]]});
-				this.setState({data: filtereddata});
+
+				var categoryfrequencies = filtereddata.reduce(function(freq,current){
+					var currentCategory = current.category.toLowerCase();
+					if(!freq.hasOwnProperty(currentCategory)) freq[currentCategory] = 0;
+					freq[currentCategory]++;
+					return freq;
+				},{});
+
+				var categorydataarray = Object.keys(categoryfrequencies).map(function(categorydata){
+					return [categorydata ,categoryfrequencies[categorydata]];
+				});
+				this.setState({categorychartdata: categorydataarray});
 			},
 			getPieChartData: function(data)
 			{
@@ -674,7 +711,7 @@ var PieChart = React.createClass({
 
 			getData: function()
 			{
-				this.serverRequest = $.getJSON("https://spreadsheets.google.com/feeds/list/1x3riTR0U7Hzdmp09wytjBen8Jh6cEPWYNYHI673n6o4/1/public/basic?alt=json", function (tpm_data) {
+				this.serverRequest = $.getJSON("https://spreadsheets.google.com/feeds/list/1IVO1hqVlex-VkzOhZpPybTLuqylU-8MsPww5DILvxvs/1/public/basic?alt=json", function (tpm_data) {
 					var transformedDataset = transformDataset(tpm_data);
 					transformedDataset = transformedDataset.filter(function(val){
 						return !isNaN(val.longitude) && !isNaN(val.latitude)})
@@ -746,6 +783,18 @@ var PieChart = React.createClass({
 					<div className="row">
 				    <div className="col-md-8">
 					<CategoryBarChart data={this.state.categorychartdata} />
+					</div>
+					</div>
+
+					<div className="row">
+					<div className="col-md-8">
+					<DataTable
+					keys="name"
+					columns={tablecolumns}
+					initialData={tabledata}
+					initialPageLength={5}
+					initialSortBy={{ prop: 'category', order: 'descending' }}
+					/>
 					</div>
 					</div>
 
