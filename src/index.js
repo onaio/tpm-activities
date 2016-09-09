@@ -503,7 +503,7 @@ var PieChart = React.createClass({
 						var feature = features[0];
 						var popup = new mapboxgl.Popup()
 						.setLngLat(map.unproject(e.point))
-						.setHTML(feature.properties.point_count + " TPM Activities")
+						.setHTML(feature.properties.point_count + " TPM Interviews")
 						.addTo(map);
 					});
 				});
@@ -512,7 +512,7 @@ var PieChart = React.createClass({
 			getMap: function()
 			{
 				mapboxgl.accessToken = this.state.token;
-				var map = new mapboxgl.Map({container: 'app',
+				var map = new mapboxgl.Map({container: 'map',
 				style: 'mapbox://styles/mapbox/streets-v9',
 				center: [44, 3], // starting position
 				zoom: 5.5 // starting zoom
@@ -567,7 +567,7 @@ var PieChart = React.createClass({
 
 		render: function() {
 			return (
-			<div id="map">
+			<div id="map" className="map">
 			</div>
 
 			);
@@ -772,36 +772,26 @@ var PieChart = React.createClass({
 					</div>
 
 					<div className="row">
-					<div className="col-md-4">
+					<div className="col-md-6">
 					<PieChart cc={this.state.cc} fs={this.state.fs} data={this.state.piechartdata} />
 					</div>
-					<div className="col-md-4">
+					<div className="col-md-6">
 					<IPBarChart data={this.state.ipchartdata}/>
 					</div>
 					</div>
 
 					<div className="row">
-				    <div className="col-md-8">
+				    <div className="col-md-12">
 					<CategoryBarChart data={this.state.categorychartdata} />
 					</div>
 					</div>
 
 					<div className="row">
-					<div className="col-md-8">
-					<DataTable
-					keys="name"
-					columns={tablecolumns}
-					initialData={tabledata}
-					initialPageLength={5}
-					initialSortBy={{ prop: 'category', order: 'descending' }}
-					/>
-					</div>
 					</div>
 
 					</div>)
 				}
 			});
-
 
 			ReactDOM.render(<Dashboard /> ,
 			document.getElementById('app'));

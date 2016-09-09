@@ -12,8 +12,15 @@ h1
 {
 	max-width: 1024px;
 	margin: 0 auto;
+},
+#map, .map
+{
+    width: 1024px;
+    height: 1200px;
+    margin: 0 auto;
+    padding: 0 1em;
 }
-#map , #app {
+ #app {
     top: 20px;
     bottom: 0;
     max-width: 1024px;
