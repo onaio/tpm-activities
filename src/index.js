@@ -6,6 +6,8 @@ var $ = require ('jquery');
 var GeoJSON = require('geojson');
 var _ = require ('lodash');
 var mapboxgl = require('mapbox-gl');
+var c3 = require('c3');
+var DataTable = require('react-data-components').DataTable;
 
 function transformDataset(dataset) {
 	if (dataset !== undefined || dataset !== null)
@@ -29,6 +31,32 @@ function transformDataset(dataset) {
 	return transformedDataset;
 }
 
+
+
+var tablecolumns = [
+  { title: 'IP', prop: 'ip'  },
+  { title: 'Category', prop: 'category' },
+  { title: 'Type', prop: 'tpmtype' },
+  { title: 'From', prop: 'from' },
+  { title: 'To', prop: 'to' },
+  { title: 'Surveys', prop: 'surveys' }
+
+];
+
+var tabledata = [
+  { ip: 'UNICEF', category: 'Education Monitoring', tpmtype: 'Cash Transfer', from: '10/1/2015', to: '10/15/2015', surveys: '84' },
+  { ip: 'WFP', category: 'Livelihoods', tpmtype: 'Field Survey', from: '10/1/2015', to: '12345678', surveys: '84' },
+  { ip: 'UNICEF', category: 'Education Monitoring', tpmtype: 'Cash Transfer', from: '11/1/2015', to: '10/20/2015', surveys: '84' },
+  { ip: 'SNS', category: 'Nutrition & Health Monitoring', tpmtype: 'Field Survey', from: '10/1/2015', to: '10/30/2015', surveys: '84' },
+
+  // It also supports arrays
+  // [ 'name value', 'city value', 'address value', 'phone value' ]
+];
+
+
+
+const columns = [['cc', 22],
+['fs', 30]]
 
 const ALL = 'all';
 var partnersObj = [
@@ -56,61 +84,168 @@ var typesObj = [
 {"name": "CC"},
 {"name": "FS"}];
 
-var PartnerFilter= React.createClass({
-	getPartners: function() {
-		var partners = [];
-		for (var i = 0; i < partnersObj.length; i++) {
-			partners.push(partnersObj[i].name);
-		}
-		this.setState({partners: partners});
-	},
-	componentDidMount: function() {
-		this.getPartners();
-	},
-	getInitialState: function() {
-		return {
-			partners: []
-		};
-	},
-	_getOptions: function() {
-		var options = [],
-		partners = this.state.partners;
 
-		options.push((
+var PieChart = React.createClass({
+	_renderChart: function (data) {
+		if(data !== undefined)
+		{
+			this.chart = c3.generate({
+				bindto: '#pie-chart',
+				data: {
+					columns: data,
+					type: 'pie'
+				}
+			});
+		}
+	},
+
+	componentDidMount: function () {
+		this._renderChart(this.props.data);
+	},
+	render: function () {
+		this._renderChart(this.props.data);
+		return (
+			<div className="row" id="pie-chart"></div>
+			)
+		}
+	});
+
+	var IPBarChart = React.createClass({
+		_renderChart: function (data)
+		{
+			if (data !== undefined)
+			{
+				this.chart = c3.generate({
+					bindto: '#ip-bar-chart',
+					data: {
+						columns: data,
+						types: {
+							unicef: 'bar',
+							wfp: 'bar',
+							nrc: 'bar',
+							brics: 'bar',
+							brics_cesvi: 'bar',
+							fao: 'bar',
+							sns: 'bar'
+						}
+					},
+					axis: {
+						rotated: false
+					}
+				});
+			}
+		},
+		componentDidMount: function () {
+			this._renderChart(this.props.data);
+		},
+		render: function () {
+			this._renderChart(this.props.data);
+			return (
+			<div className="row" id="ip-bar-chart"></div>
+			)
+		}
+	});
+
+
+	var CategoryBarChart = React.createClass({
+		_renderChart: function (data)
+		{
+			if (data !== undefined)
+			{
+				this.chart = c3.generate({
+					bindto: '#cat-bar-chart',
+					data: {
+						columns: data,
+						types: {
+							'nutrition & health': 'bar',
+							'livelihood' : 'bar',
+							'livelihoods' : 'bar',
+							'cash transfers': 'bar',
+							'irf monitoring': 'bar',
+							'nutritional casual analysis': 'bar',
+							'nutritional casual analysis verification': 'bar',
+							'nutrition casual analysis verification': 'bar',
+							'education monitoring': 'bar',
+							'protection monitoring': 'bar',
+							'quarterly monitoring': 'bar',
+							'midline': 'bar',
+							'wash monitoring': 'bar',
+							'nutrition & health monitoring': 'bar',
+
+						}
+					},
+					axis: {
+						rotated: false
+					}
+				});
+			}
+		},
+		componentDidMount: function () {
+			this._renderChart(this.props.data);
+		},
+		render: function () {
+			this._renderChart(this.props.data);
+			return (
+			<div className="row" id="cat-bar-chart"></div>
+			)
+		}
+	});
+
+	var PartnerFilter= React.createClass({
+		getPartners: function() {
+			var partners = [];
+			for (var i = 0; i < partnersObj.length; i++) {
+				partners.push(partnersObj[i].name);
+			}
+			this.setState({partners: partners});
+		},
+		componentDidMount: function() {
+			this.getPartners();
+		},
+		getInitialState: function() {
+			return {
+				partners: []
+			};
+		},
+		_getOptions: function() {
+			var options = [],
+			partners = this.state.partners;
+
+			options.push((
 			<li key={ 0 }>
 			<a href="#" data-value={ 'all' } onClick={ this.onChange }>Implementing Partner</a>
 			</li>
 			));
 
-		for (let i = 0; i < partners.length; i++) {
-			var partner = partners[i],
-			y = i + 1;
-			options.push((
+			for (let i = 0; i < partners.length; i++) {
+				var partner = partners[i],
+				y = i + 1;
+				options.push((
 				<li key={ partner }>
 				<a href="#" data-value={ partner } onClick={ this.onChange }>{ partner }</a>
 				</li>
 				));
-		}
+			}
 
-		return options;
-	},
-	onChange: function(e) {
-		e.preventDefault();
-		var partner = e.target.dataset.value.toLowerCase(),
-		partnerLabel = partner.toUpperCase();
-		if(partner === ALL) {
-			partner = null;
-			partnerLabel = ALL;
-		}
+			return options;
+		},
+		onChange: function(e) {
+			e.preventDefault();
+			var partner = e.target.dataset.value.toLowerCase(),
+			partnerLabel = partner.toUpperCase();
+			if(partner === ALL) {
+				partner = null;
+				partnerLabel = ALL;
+			}
 
-		this.setState({currentPartner: partnerLabel });
-		if(this.props.onChange !== undefined) {
-			this.props.onChange(partner);
-		}
-	},
-	render: function() {
-		var options = this._getOptions();
-		return (
+			this.setState({currentPartner: partnerLabel });
+			if(this.props.onChange !== undefined) {
+				this.props.onChange(partner);
+			}
+		},
+		render: function() {
+			var options = this._getOptions();
+			return (
 			<div className="dropdown col-md-3" id="partner-filter">
 			<button className="btn btn-default dropdown-toggle filter-active" type="button" data-toggle="dropdown" aria-expanded="false">
 			<span className="data-label">{ this.state.currentPartner !== undefined && this.state.currentPartner !== ALL ? this.state.currentPartner : "Implementing Partner"} </span>
@@ -368,7 +503,7 @@ var PartnerFilter= React.createClass({
 						var feature = features[0];
 						var popup = new mapboxgl.Popup()
 						.setLngLat(map.unproject(e.point))
-						.setHTML(feature.properties.point_count + " TPM Activities")
+						.setHTML(feature.properties.point_count + " TPM Interviews")
 						.addTo(map);
 					});
 				});
@@ -377,7 +512,7 @@ var PartnerFilter= React.createClass({
 			getMap: function()
 			{
 				mapboxgl.accessToken = this.state.token;
-				var map = new mapboxgl.Map({container: 'app',
+				var map = new mapboxgl.Map({container: 'map',
 				style: 'mapbox://styles/mapbox/streets-v9',
 				center: [44, 3], // starting position
 				zoom: 5.5 // starting zoom
@@ -432,7 +567,7 @@ var PartnerFilter= React.createClass({
 
 		render: function() {
 			return (
-			<div id="map">
+			<div id="map" className="map">
 			</div>
 
 			);
@@ -444,7 +579,8 @@ var PartnerFilter= React.createClass({
 		getInitialState: function() {
 			return {currentPartner: this.props.partner !== undefined ? this.props.partner : null,
 				currentCategory: this.props.category !== undefined ? this.props.category : null,
-				currentType: this.props.type !== undefined ? this.props.type : null};
+				currentType: this.props.type !== undefined ? this.props.type : null,
+				piechartdata: []};
 			},
 			_handleFilters: function(data, kwargs) {
 				var localstorageData = JSON.parse(localStorage.getItem('data'));
@@ -493,6 +629,8 @@ var PartnerFilter= React.createClass({
 				{
 					filtereddata = localstorageData;
 				}
+
+			    this.setState({data: filtereddata});
 				var cc = filtereddata.filter(function (dataset)
 				{
 					return dataset.tpmtype.toLowerCase() == 'cc';
@@ -501,22 +639,89 @@ var PartnerFilter= React.createClass({
 				{
 					return dataset.tpmtype.toLowerCase() == 'fs';
 				});
-				this.setState({data: filtereddata});
-				this.setState({cc: cc.length});
-				this.setState({fs: fs.length});
+				var ipfrequencies = filtereddata.reduce(function(freq,current){
+					var currentIP = current.ip.toLowerCase();
+					if(!freq.hasOwnProperty(currentIP)) freq[currentIP] = 0;
+					freq[currentIP]++;
+					return freq;
+				},{});
+
+				var ipdataarray = Object.keys(ipfrequencies).map(function(data){
+					return [data,ipfrequencies[data]];
+				});
+				this.setState({ipchartdata: ipdataarray});
+				this.setState({piechartdata: [['cc', cc.length],
+				['fs', fs.length]]});
+
+				var categoryfrequencies = filtereddata.reduce(function(freq,current){
+					var currentCategory = current.category.toLowerCase();
+					if(!freq.hasOwnProperty(currentCategory)) freq[currentCategory] = 0;
+					freq[currentCategory]++;
+					return freq;
+				},{});
+
+				var categorydataarray = Object.keys(categoryfrequencies).map(function(categorydata){
+					return [categorydata ,categoryfrequencies[categorydata]];
+				});
+				this.setState({categorychartdata: categorydataarray});
+			},
+			getPieChartData: function(data)
+			{
+				var cc = data.filter(function (dataset)
+				{
+					return dataset.tpmtype.toLowerCase() == 'cc';
+				});
+				var fs = data.filter(function (dataset)
+				{
+					return dataset.tpmtype.toLowerCase() == 'fs';
+				});
+				this.setState({piechartdata: [['cc', cc.length],
+				                              ['fs', fs.length]]});
+			},
+
+			getIPChartData: function (data)
+			{
+				var ipfrequencies = data.reduce(function(freq,current){
+					var currentIP = current.ip.toLowerCase();
+					if(!freq.hasOwnProperty(currentIP)) freq[currentIP] = 0;
+					freq[currentIP]++;
+					return freq;
+				},{});
+
+				var ipdataarray = Object.keys(ipfrequencies).map(function(data){
+					return [data,ipfrequencies[data]];
+				});
+				this.setState({ipchartdata: ipdataarray});
+			},
+
+			getCategoryChartData: function (data)
+			{
+				var categoryfrequencies = data.reduce(function(freq,current){
+					var currentCategory = current.category.toLowerCase();
+					if(!freq.hasOwnProperty(currentCategory)) freq[currentCategory] = 0;
+					freq[currentCategory]++;
+					return freq;
+				},{});
+
+				var categorydataarray = Object.keys(categoryfrequencies).map(function(data){
+					return [data,categoryfrequencies[data]];
+				});
+				this.setState({categorychartdata: categorydataarray});
 			},
 
 			getData: function()
 			{
-				this.serverRequest = $.getJSON("https://spreadsheets.google.com/feeds/list/1x3riTR0U7Hzdmp09wytjBen8Jh6cEPWYNYHI673n6o4/1/public/basic?alt=json", function (tpm_data) {
+				this.serverRequest = $.getJSON("https://spreadsheets.google.com/feeds/list/1IVO1hqVlex-VkzOhZpPybTLuqylU-8MsPww5DILvxvs/1/public/basic?alt=json", function (tpm_data) {
 					var transformedDataset = transformDataset(tpm_data);
 					transformedDataset = transformedDataset.filter(function(val){
 						return !isNaN(val.longitude) && !isNaN(val.latitude)})
 						this.setState({
 							data: transformedDataset
-
 						});
 						localStorage.setItem('data', JSON.stringify(transformedDataset));
+						this.getPieChartData(transformedDataset);
+						this.getIPChartData(transformedDataset);
+						this.getCategoryChartData(transformedDataset);
 					}.bind(this));
 				},
 
@@ -553,25 +758,40 @@ var PartnerFilter= React.createClass({
 				render: function() {
 					var token = 'pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ';
 					return (
-
 					<div className="container fluid">
-					<div id="header">
+					<div className="row" id="header">
 					<Header />
 					<PartnerFilter onChange={ this.setPartner } />
 					<CategoryFilter onChange={ this.setCategory } />
 					<TypeFilter onChange= {this.setType} />
 					</div>
 
-					<div>
-					<MapWidget token='pk.eyJ1Ijoib25hIiwiYSI6IlVYbkdyclkifQ.0Bz-QOOXZZK01dq4MuMImQ'
+					<div className="row">
+					<MapWidget token={token}
 					currentPartner={this.state.currentPartner} data= {this.state.data}/>
 					</div>
 
+					<div className="row">
+					<div className="col-md-6">
+					<PieChart cc={this.state.cc} fs={this.state.fs} data={this.state.piechartdata} />
+					</div>
+					<div className="col-md-6">
+					<IPBarChart data={this.state.ipchartdata}/>
+					</div>
+					</div>
+
+					<div className="row">
+				    <div className="col-md-12">
+					<CategoryBarChart data={this.state.categorychartdata} />
+					</div>
+					</div>
+
+					<div className="row">
+					</div>
 
 					</div>)
 				}
 			});
-
 
 			ReactDOM.render(<Dashboard /> ,
 			document.getElementById('app'));
